@@ -1,0 +1,68 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from keras.datasets import fashion_mnist
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Activation, Dropout
+from keras.utils import to_categorical
+
+(train_X, train_Y), (test_X, test_Y) = fashion_mnist.load_data()
+
+train_X = train_X.reshape(-1, 28, 28, 1).astype('float32') / 255.0
+test_X = test_X.reshape(-1, 28, 28, 1).astype('float32') / 255.0
+
+train_Y_one_hot = to_categorical(train_Y, 10)
+test_Y_one_hot = to_categorical(test_Y, 10)
+
+model = Sequential()
+
+
+model.add(Conv2D(
+    32, (3, 3),
+    padding='same',
+    input_shape=(28, 28, 1)
+))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(64, (3, 3), padding='same'))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(128, (3, 3), padding='same'))
+model.add(Activation('relu'))
+
+model.add(Conv2D(128, (3, 3), padding='same'))
+model.add(Activation('relu'))
+
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+
+model.add(Dropout(0.5))
+
+model.add(Dense(10, activation='softmax'))
+
+model.compile(
+    optimizer='adam',
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+model.fit(
+    train_X,
+    train_Y_one_hot,
+    epochs=10,
+    batch_size=64,
+    validation_split=0.1
+)
+
+test_loss, test_acc = model.evaluate(test_X, test_Y_one_hot)
+
+print("Test Loss:", test_loss)
+print("Test Accuracy:", test_acc)
+
+predictions = model.predict(test_X)
+
+plt.imshow(test_X[0].reshape(28, 28), cmap='gray')
+plt.title(f"Predicted: {np.argmax(predictions[0])}")
+plt.axis('off')
+plt.show()

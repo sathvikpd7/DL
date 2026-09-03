@@ -1,0 +1,75 @@
+import tensorflow as tf
+from tensorflow import keras
+from keras.models import Sequential
+from keras import Input
+from keras.layers import Dense
+import pandas as pd
+import numpy as np
+import sklearn
+from sklearn.metrics import classification_report
+import matplotlib
+import matplotlib.pyplot as plt
+
+(X_train, y_train), (X_test, y_test) = keras.datasets.mnist.load_data()
+
+print("Shape of X_train :", X_train.shape)
+print("Shape of y_train :", y_train.shape)
+print("Shape of X_test :", X_test.shape)
+print("Shape of y_test :", y_test.shape)
+
+fig, ax = plt.subplots(2, 5, sharex=True, sharey=True, figsize=(12,6), layout=True)
+n=0
+for i in range(2):
+    for j in range(5):
+        ax[i,j].imshow(X_train[n])
+        ax[i,j].set(title=y_train[n])
+        n=n+1
+plt.show()
+
+X_train = X_train.reshape(60000, 784).astype("float32") / 255
+X_test = X_test.reshape(10000, 784).astype("float32") / 255
+
+print("New shape of X_train :", X_train.shape)
+print("New shape of X_test :", X_test.shape)
+
+model = Sequential(name="DFF-Model")
+model.add(Input(shape=(784,), name="Input-Layer"))
+model.add(Dense(128, activation='relu', name="Hidden-Layer-1", kernel_initializer="HeNormal"))
+model.add(Dense(64, activation='relu', name="Hidden-Layer-2", kernel_initializer="HeNormal"))
+model.add(Dense(32, activation='relu', name="Hidden-Layer-3", kernel_initializer="HeNormal"))
+model.add(Dense(10, activation='softmax', name="Output-Layer"))
+
+model.compile(
+    optimizer="adam",
+    loss="SparseCategoricalCrossentropy",
+    metrics=["Accuracy"],
+    loss_weights=None,
+    weighted_metrics=None,
+    run_eagerly=None,
+    steps_per_execution=None
+)
+
+model.fit(
+    X_train,
+    y_train,
+    batch_size=10,
+    epochs=5,
+    verbose='auto',
+    validation_split=0.2,
+    shuffle=True
+)
+
+pred_labels_train = np.argmax(model.predict(X_train), axis=1)
+pred_labels_test = np.argmax(model.predict(X_test), axis=1)
+
+print(" ")
+print("Model Summary")
+print(model.summary())
+
+print(" ")
+print("Evaluation on Training Data")
+print(classification_report(y_train, pred_labels_train))
+
+print(" ")
+print("Evaluation on Test Data")
+print(classification_report(y_test, pred_labels_test))
